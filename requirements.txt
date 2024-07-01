@@ -1,0 +1,6 @@
+pymongo
+certifi
+langchain-openai
+langchain-core
+langchain-tools
+python-dotenv
