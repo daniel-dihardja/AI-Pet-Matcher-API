@@ -44,6 +44,27 @@ def format_summary_prompt(pets, user_message):
     return output
 
 
+def get_pets_from_message(message):
+    llm = ChatOpenAI(
+        model=os.getenv("OPENAI_MODEL"),
+        api_key=os.getenv(
+            "OPENAI_API_KEY",
+        ),
+        temperature=0,
+    )
+    llm_with_tools = llm.bind_tools([get_pets])
+    query_template = load_template("query_prompt_template.txt")
+    query_prompt_template = PromptTemplate.from_template(query_template)
+    query_chain = (
+        query_prompt_template
+        | llm_with_tools
+        | (lambda x: x.tool_calls[0]["args"])
+        | get_pets
+    )
+    res = query_chain.invoke(message)
+    return res
+
+
 def get_matching_pets_from_message(message):
     llm = ChatOpenAI(
         model=os.getenv("OPENAI_MODEL"),

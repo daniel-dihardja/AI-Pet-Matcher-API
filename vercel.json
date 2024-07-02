@@ -4,12 +4,20 @@
         {
             "src": "api/get_matching_pets.py",
             "use": "@vercel/python"
+        },
+        {
+            "src": "api/get_pets.py",
+            "use": "@vercel/python"
         }
     ],
     "routes": [
         {
             "src": "/api/get_matching_pets",
             "dest": "/api/get_matching_pets.py"
+        },
+        {
+            "src": "/api/get_pets",
+            "dest": "/api/get_pets.py"
         }
     ]
 }
