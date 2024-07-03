@@ -27,22 +27,32 @@ class handler(BaseHTTPRequestHandler):
 
         # Extract the message parameter from the post_data
         message = post_data.get("message", "")
+        pets = post_data.get("pets", "")
 
-        # Call the get_matching_pets_from_message function from chain module
         try:
-            response_message = chain.get_matching_pets_from_message(message)
-            # Notify the Remix webhook endpoint
-            webhook_url = os.getenv("WEBHOOK_URL")
-            webhook_response = requests.post(
-                webhook_url, json={"message": response_message}
-            )
+            # Call the get_matching_pets_from_message function from chain module
+            response_message = chain.get_matching_pets_for(message, pets)
 
-            if webhook_response.status_code == 200:
+            # Check if in development mode
+            if os.getenv("MODE") == "development":
+                # Return the response directly
                 self.send_response(200)
-                response = {"message": "Processing initiated and webhook notified"}
+                response = {"message": response_message}
             else:
-                self.send_response(500)
-                response = {"error": "Webhook notification failed"}
+                # Notify the Remix webhook endpoint
+                webhook_url = os.getenv("WEBHOOK_URL")
+                webhook_response = requests.post(
+                    webhook_url, json={"message": response_message}
+                )
+
+                if webhook_response.status_code == 200:
+                    self.send_response(200)
+                    response = {"message": "Processing initiated and webhook notified"}
+                else:
+                    self.send_response(500)
+                    response = {
+                        "error": f"Webhook notification failed with status code {webhook_response.status_code}"
+                    }
 
         except Exception as e:
             self.send_response(500)

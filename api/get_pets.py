@@ -30,7 +30,7 @@ class handler(BaseHTTPRequestHandler):
             message = post_data.get("message", "")
 
             # Call the get_matching_pets_from_message function from chain module
-            pets = chain.get_pets_from_message(message)
+            pets = chain.get_pets_for(message)
 
             # Check if in development mode
             if os.getenv("MODE") == "development":
