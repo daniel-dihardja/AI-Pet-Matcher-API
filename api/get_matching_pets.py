@@ -3,6 +3,9 @@ import json
 from http.server import BaseHTTPRequestHandler
 import requests  # Ensure requests is installed and added to requirements.txt
 from . import chain  # Import chain module from the current directory
+from dotenv import load_dotenv
+
+load_dotenv(override=True)
 
 
 class handler(BaseHTTPRequestHandler):
@@ -34,13 +37,13 @@ class handler(BaseHTTPRequestHandler):
             response_message = chain.get_matching_pets_for(message, pets)
 
             # Check if in development mode
-            if os.getenv("MODE") == "development":
+            if os.getenv("DEBUG") == "True":
                 # Return the response directly
                 self.send_response(200)
                 response = {"message": response_message}
             else:
                 # Notify the Remix webhook endpoint
-                webhook_url = os.getenv("WEBHOOK_URL")
+                webhook_url = os.getenv("WEBHOOK_COMPLETE_URL")
                 webhook_response = requests.post(
                     webhook_url, json={"message": response_message}
                 )

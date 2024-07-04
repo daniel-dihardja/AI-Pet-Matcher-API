@@ -2,7 +2,11 @@ import os
 import json
 from http.server import BaseHTTPRequestHandler
 import requests
+from concurrent.futures import ThreadPoolExecutor
 from . import chain  # Import chain module from the current directory
+from dotenv import load_dotenv
+
+load_dotenv(override=True)
 
 
 class handler(BaseHTTPRequestHandler):
@@ -32,27 +36,23 @@ class handler(BaseHTTPRequestHandler):
             # Call the get_matching_pets_from_message function from chain module
             pets = chain.get_pets_for(message)
 
-            # Check if in development mode
-            if os.getenv("MODE") == "development":
+            # Prepare the request data for /api/get_matching_pets
+            request_data = {"message": message, "pets": pets}
+
+            # Check if in debug mode
+            if os.getenv("DEBUG") == "True":
                 # Return the response directly
                 self.send_response(200)
                 response = {"message": message, "pets": pets}
             else:
-                # Notify the summarize webhook endpoint
-                webhook_url = os.getenv("WEBHOOK_SUMMARIZE_URL")
-                webhook_response = requests.post(
-                    webhook_url, json={"message": message, "pets": pets}
-                )
+                # Use a ThreadPoolExecutor to send the request to /api/get_matching_pets asynchronously
+                with ThreadPoolExecutor() as executor:
+                    executor.submit(
+                        self.notify_get_matching_pets, request_data, provided_api_key
+                    )
 
-                # Check the response status code from the webhook call
-                if webhook_response.status_code == 200:
-                    self.send_response(200)
-                    response = {"message": "Processing initiated and webhook notified"}
-                else:
-                    self.send_response(500)
-                    response = {
-                        "error": f"Webhook notification failed with status code {webhook_response.status_code}"
-                    }
+                self.send_response(200)
+                response = {"message": "Processing initiated and request sent"}
 
         except Exception as e:
             self.send_response(500)
@@ -62,3 +62,13 @@ class handler(BaseHTTPRequestHandler):
         self.send_header("Content-type", "application/json")
         self.end_headers()
         self.wfile.write(json.dumps(response).encode("utf-8"))
+
+    def notify_get_matching_pets(self, request_data, api_key):
+        try:
+            # Send the POST request to /api/get_matching_pets
+            matching_pets_url = os.getenv("WEBHOOK_SUMMARIZE_URL")
+            headers = {"x-api-key": api_key}
+            requests.post(matching_pets_url, json=request_data, headers=headers)
+        except Exception as e:
+            # Log the error, but don't block the main function
+            print(f"Error sending request to /api/get_matching_pets: {e}")
