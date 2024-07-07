@@ -1,8 +1,6 @@
 import os
 import json
 from http.server import BaseHTTPRequestHandler
-import requests
-from concurrent.futures import ThreadPoolExecutor
 from . import chain  # Import chain module from the current directory
 from dotenv import load_dotenv
 
@@ -33,26 +31,12 @@ class handler(BaseHTTPRequestHandler):
             # Extract the message parameter from the post_data
             message = post_data.get("message", "")
 
-            # Call the get_matching_pets_from_message function from chain module
-            pets = chain.get_pets_for(message)
+            # Call the get_pets_for function from chain module
+            res = chain.get_pets_for(message)
 
-            # Prepare the request data for /api/get_matching_pets
-            request_data = {"message": message, "pets": pets}
-
-            # Check if in debug mode
-            if os.getenv("DEBUG") == "True":
-                # Return the response directly
-                self.send_response(200)
-                response = {"message": message, "pets": pets}
-            else:
-                # Use a ThreadPoolExecutor to send the request to /api/get_matching_pets asynchronously
-                with ThreadPoolExecutor() as executor:
-                    executor.submit(
-                        self.notify_get_matching_pets, request_data, provided_api_key
-                    )
-
-                self.send_response(200)
-                response = {"message": "Processing initiated and request sent"}
+            # Prepare the response
+            self.send_response(200)
+            response = {"message": res}
 
         except Exception as e:
             self.send_response(500)
@@ -62,13 +46,3 @@ class handler(BaseHTTPRequestHandler):
         self.send_header("Content-type", "application/json")
         self.end_headers()
         self.wfile.write(json.dumps(response).encode("utf-8"))
-
-    def notify_get_matching_pets(self, request_data, api_key):
-        try:
-            # Send the POST request to /api/get_matching_pets
-            matching_pets_url = os.getenv("WEBHOOK_SUMMARIZE_URL")
-            headers = {"x-api-key": api_key}
-            requests.post(matching_pets_url, json=request_data, headers=headers)
-        except Exception as e:
-            # Log the error, but don't block the main function
-            print(f"Error sending request to /api/get_matching_pets: {e}")
