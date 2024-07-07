@@ -2,6 +2,7 @@ import os
 import pymongo
 import certifi
 import json
+from openai import OpenAI
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import PromptTemplate
 from langchain.tools import tool
@@ -29,19 +30,57 @@ def get_collection():
     return db[os.getenv("COLLECTION_NAME")]
 
 
-@tool
-def get_pets(pet_type: str) -> str:
-    """Get all pets of a certain type. valid values for pet_type are 'Hund', 'Katze'"""
-    print("pet_type: ", pet_type)
+def get_openai_client():
+    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+    return client
 
-    coll = get_collection()
-    query = {"pet_type": pet_type}
+
+def get_gpt_embeddings(messages):
+    client = get_openai_client()
+    response = client.embeddings.create(model="text-embedding-ada-002", input=messages)
+    return response.data[0].embedding
+
+
+@tool
+def get_pets(pet_type: str, message: str) -> str:
+    """Get all pets of a certain type. valid values for pet_type are 'Hund', 'Katze'"""
+
+    message_embed = get_gpt_embeddings(message)
+
     try:
-        results = coll.find(query)
-        results_list = list(results)
-        return json.dumps(results_list, default=str)
+        results = vector_search(message_embed, pet_type)
+        return json.dumps(results, default=str)
     except Exception as e:
         return str(e)
+
+
+def vector_search(query_vector, filter):
+    coll = get_collection()
+    pipeline = [
+        {
+            "$vectorSearch": {
+                "index": "pet_vector_index",
+                "path": "embedding",
+                "queryVector": query_vector,
+                "numCandidates": 150,
+                "limit": 5,
+            }
+        },
+        {"$match": {"pet_type": filter}},  # Add your filter criteria here
+        {
+            "$project": {
+                "_id": 0,
+                "score": {"$meta": "vectorSearchScore"},
+                "name": 1,
+                "description": 1,
+                "number": 1,
+                "neutered": 1,
+            }
+        },
+    ]
+
+    result = coll.aggregate(pipeline)
+    return list(result)
 
 
 def load_template(template_file) -> str:
