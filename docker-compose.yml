@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  lambda:
+    build: .
+    image: ai-pet-query
+    ports:
+      - "9000:8080"
+    env_file:
+      - .env

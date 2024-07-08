@@ -1,2 +1,4 @@
 .vercel
 .env
+creds.md
+.DS_Store

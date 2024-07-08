@@ -8,15 +8,22 @@ from langchain_core.prompts import PromptTemplate
 from langchain.tools import tool
 from dotenv import load_dotenv
 
+# Load environment variables
 load_dotenv(override=True)
+
+# Define paths to the template files
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+TEMPLATES_DIR = os.path.join(BASE_DIR, "prompt_templates")
+QUERY_PROMPT_TEMPLATE_PATH = os.path.join(TEMPLATES_DIR, "query_prompt_template.txt")
+SUMMARY_PROMPT_TEMPLATE_PATH = os.path.join(
+    TEMPLATES_DIR, "summary_prompt_template.txt"
+)
 
 
 def get_llm():
     llm = ChatOpenAI(
         model=os.getenv("OPENAI_MODEL"),
-        api_key=os.getenv(
-            "OPENAI_API_KEY",
-        ),
+        api_key=os.getenv("OPENAI_API_KEY"),
         temperature=0,
     )
     return llm
@@ -117,7 +124,7 @@ def get_pets_for(message):
 
     llm = get_llm()
     llm_with_tools = llm.bind_tools([get_pets])
-    query_template = load_template("query_prompt_template.txt")
+    query_template = load_template(QUERY_PROMPT_TEMPLATE_PATH)
     query_prompt_template = PromptTemplate.from_template(query_template)
     query_chain = (
         query_prompt_template
@@ -126,7 +133,7 @@ def get_pets_for(message):
         | get_pets
     )
 
-    summary_template = load_template("summary_prompt_template.txt")
+    summary_template = load_template(SUMMARY_PROMPT_TEMPLATE_PATH)
     summary_prompt_template = PromptTemplate.from_template(summary_template)
     summary_chain = summary_prompt_template | llm
 
