@@ -73,7 +73,7 @@ def vector_search(query_vector, filter):
                 "limit": 5,
             }
         },
-        {"$match": {"pet_type": filter}},  # Add your filter criteria here
+        {"$match": {"pet_type": filter}},
         {
             "$project": {
                 "_id": 0,
