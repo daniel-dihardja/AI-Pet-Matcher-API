@@ -50,7 +50,21 @@ def get_gpt_embeddings(messages):
 
 @tool
 def get_pets(pet_type: str, message: str) -> str:
-    """Get all pets of a certain type. valid values for pet_type are 'Hund', 'Katze'"""
+    """Get all pets of a certain type. Valid values for pet_type are:
+    - 'dog' (Hund, Hunde)
+    - 'cat' (Katze, Katzen)
+    - 'rabbit' (Kaninchen)
+    - 'guinea_pig' (Meerschweinchen)
+    - 'small_mammal' (kleines Säugetier)
+    - 'snake' (Schlange)
+    - 'aquatic_turtle' (Wasserschildkröte)
+    - 'tortoise' (Landschildkröte)
+    - 'exotic' (exotisch)
+    - 'bird' (Vogel)
+
+    The function takes the pet type and the user message as input, processes the message to extract relevant embeddings,
+    and performs a vector search to find matching pets. The results are returned as a JSON string.
+    """
 
     message_embed = get_gpt_embeddings(message)
 
