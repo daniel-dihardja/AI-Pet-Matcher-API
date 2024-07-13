@@ -7,8 +7,12 @@ def lambda_handler(event, context):
     print("Received event:", json.dumps(event))
 
     try:
-        # Parse the body as JSON
-        body = json.loads(event.get("body", "{}"))
+        # Check if the event has a body (deployed environment)
+        if "body" in event:
+            body = json.loads(event.get("body", "{}"))
+        else:
+            # Local development environment
+            body = event
 
         # Extract the message from the parsed body
         message = body.get("message")
@@ -27,6 +31,9 @@ def lambda_handler(event, context):
         res = chain.get_pets_for(message)
         print("Response:", res)
         return {"statusCode": 200, "body": json.dumps({"response": res})}
+    except json.JSONDecodeError as e:
+        print("JSON decode error:", str(e))
+        return {"statusCode": 400, "body": json.dumps({"error": "Invalid JSON format"})}
     except Exception as e:
         print("General error:", str(e))
         return {"statusCode": 500, "body": json.dumps({"error": str(e)})}
