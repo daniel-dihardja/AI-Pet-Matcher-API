@@ -96,6 +96,8 @@ def vector_search(query_vector, filter):
                 "description": 1,
                 "number": 1,
                 "neutered": 1,
+                "image": 1,
+                "url": 1,
             }
         },
     ]

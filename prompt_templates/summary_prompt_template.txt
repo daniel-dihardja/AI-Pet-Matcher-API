@@ -27,10 +27,14 @@ Response Format:
   "matches": [
     {{
       "name": "Pet Name",
+      "image": "https://www.pet-shelter.com/image/of/the/pet",
+      "url": "https://www-pet-shelter.com/url/of/the/pet",
       "description": "Explanation why this pet is a good match"
     }},
     {{
       "name": "Pet Name",
+      "image": "https://www.pet-shelter.com/image/of/the/pet",
+      "url": "https://www-pet-shelter.com/url/of/the/pet",
       "description": "Explanation why this pet is a good match"
     }}
   ]
