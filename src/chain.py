@@ -112,8 +112,8 @@ def load_template(template_file) -> str:
     return system_guide
 
 
-def format_summary_prompt(pets, user_message):
-    output = {"pets": pets, "user_message": user_message}
+def format_summary_prompt(pets, message):
+    output = {"pets": pets, "message": message}
     return output
 
 
